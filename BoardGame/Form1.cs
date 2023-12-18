@@ -75,25 +75,28 @@ namespace BoardGame
 
         private int default_size = 190;
         private int default_nodeSize = 284;
+        
         private void Choosing(object sender, EventArgs e)
         {
             try
             {
                 Button Player_choose = (Button)sender;
                 /*Button choose_node = (Button)sender;*/
-                /*Button test_node1;*/
+                
                 int marked;
                 if (isAuto)
                 {
-                    /*test_node1 = button5;
+                    Button test_node1;
+                    test_node1 = button1;
                     marked = Marking(test_node1, e, "pngwing.com.png", 1);
-                    test_node1 = button2;
+                    test_node1 = button5;
                     marked = Marking(test_node1, e, "pngkey.com-tic-tac-toe-png-2056222.png", 0);
-                    test_node1 = button7;
+                    /*test_node1 = button2;
                     marked = Marking(test_node1, e, "pngwing.com.png", 1);
                     test_node1 = button3;
-                    marked = Marking(test_node1, e, "pngkey.com-tic-tac-toe-png-2056222.png", 0);
-                    test_node1 = button6;
+                    marked = Marking(test_node1, e, "pngkey.com-tic-tac-toe-png-2056222.png", 0);*/
+                    moves += 2;
+                    /*test_node1 = button6;
                     marked = Marking(test_node1, e, "pngwing.com.png", 1);*/
                     isAuto = false;
                 }
@@ -113,12 +116,12 @@ namespace BoardGame
                     List<int> temp = new List<int>(nodes);
                     foreach (int item in temp)
                     {
-                        Console.WriteLine(item);
+                        Console.Write(item + " ");
                     }
-
+                    Console.WriteLine();
                     moves++;
                     int count = 0;
-                    int res = MiniMax(cur_state, false, y, x, temp, count);
+                    int res = MiniMax(cur_state, false, y, x, temp, count,int.MinValue, int.MaxValue);
                     moves++;
                     Console.WriteLine("Result: " + res);
                     Console.WriteLine("Moves: " + moves);
@@ -167,17 +170,17 @@ namespace BoardGame
         private void Message(Node[,] board, int y, int x)
         {
             int result = Terminal(board, y, x);
-            switch (result)
+            if(result > 0)
             {
-                case (1):
-                    MessageBox.Show("You win!!");
-                    break;
-                case (0):
-                    MessageBox.Show("Tie!!");
-                    break;
-                case (-1):
-                    MessageBox.Show("You Lose!!");
-                    break;
+                MessageBox.Show("You win!!");
+            }
+            else if (result < 0 && result > -999)
+            {
+                MessageBox.Show("You Lose!!");
+            }
+            else if (result == 0)
+            {
+                MessageBox.Show("Tie!!");
             }
         }
 
@@ -228,9 +231,11 @@ namespace BoardGame
                     {
                         if (current_choose == 0)
                         {
-                            return -1;
+                            //Console.WriteLine("O win right diagonal with {0} step", moves);
+                            return -10 + moves;
                         }
-                        return 1;
+                        //Console.WriteLine("X win right diagonal with {0} step", moves);
+                        return 10 - moves;
                         //report win for s
                     }
                 }
@@ -248,9 +253,11 @@ namespace BoardGame
                         //report win for s
                         if (current_choose == 0)
                         {
-                            return -1;
+                            //Console.WriteLine("O win anti diagonal with {0} step", moves);
+                            return -10 + moves;
                         }
-                        return 1;
+                        //Console.WriteLine("X win anti diagonal with {0} step", moves);
+                        return 10 - moves;
                     }
                 }
             }
@@ -266,9 +273,11 @@ namespace BoardGame
                     //Console.WriteLine("Vertical");
                     if(current_choose == 0)
                     {
-                        return -1;
+                        //Console.WriteLine("O win vertical with {0} step", moves);
+                        return -10 + moves;
                     }
-                    return 1;
+                    //Console.WriteLine("X win vertical with {0} step", moves);
+                    return 10 - moves;
                 }
 
             }
@@ -284,9 +293,11 @@ namespace BoardGame
                     //
                     if (current_choose == 0)
                     {
-                        return -1;
+                        //Console.WriteLine("O win horizontal with {0} step", moves);
+                        return -10 + moves;
                     }
-                    return 1;
+                    //Console.WriteLine("X win horizontal with {0} step", moves);
+                    return 10 - moves;
                 }
             }
             if (moves == Math.Pow(n, 2)) // tie
@@ -316,7 +327,7 @@ namespace BoardGame
         }
 
 
-        private int MiniMax(State state, bool IsMaxTurn, int y, int x, List<int> temp, int count)
+        private int MiniMax(State state, bool IsMaxTurn, int y, int x, List<int> temp, int count, int alpha, int beta)
         {
             int def_val;
             int value = Terminal(state.current_state, y, x);
@@ -340,15 +351,13 @@ namespace BoardGame
                     //Console.WriteLine();
                     //Print_board(new_state.current_state);
                     //int test = def_val;
-                    int calling_nextMove = MiniMax(new_state, false, next_y, next_x, temp, count);
+                    int calling_nextMove = MiniMax(new_state, false, next_y, next_x, temp, count, alpha, beta);
                     def_val = Math.Max(def_val, calling_nextMove);
-                    /*if (test <= calling_nextMove && test != int.MinValue)//def_val changes
+                    alpha = Math.Max(alpha,def_val);
+                    if (beta <= alpha)
                     {
-                        findingMove = next_y*3 + next_x;
-                        Console.WriteLine("Finding_move: from {0},{1} to {2} {3}", y,x,next_y,next_x);
-                        Console.WriteLine("Greater:");
-                        Console.WriteLine("Temp {3} Check {0}, {1}: def_val = {2}", next_y, next_x,def_val,test);
-                    }*/
+                        break;
+                    }
                 }
                 //temp.Add(next_y * 3 + next_x);
                 moves--;
@@ -371,17 +380,22 @@ namespace BoardGame
                     //Print_board(new_state.current_state);
                     
                     int test = def_val;
-                    int calling_nextMove = MiniMax(new_state, true, next_y, next_x, temp, count++);
+                    int calling_nextMove = MiniMax(new_state, true, next_y, next_x, temp, count++, alpha, beta);
                     def_val = Math.Min(def_val, calling_nextMove);
-                    if (test >= calling_nextMove && test != int.MaxValue && y == PlayerY && x == PlayerX)//def_val changes
+                    beta = Math.Min(beta,def_val);
+                    if (test > calling_nextMove && test != int.MaxValue && y == PlayerY && x == PlayerX)//def_val changes
                     {
                         Console.WriteLine("Steps: " + count);
                         Console.WriteLine("Possible move: " + NextPossibleMove);
                         findingMove = next_y * 3 + next_x;
                         Console.WriteLine("Finding_move: from {0},{1} to {2},{3}", y, x, next_y, next_x);
                         count = 0;
-                        //Console.WriteLine("Greater:");
-                        //Console.WriteLine("Temp {3} Check {0}, {1}: def_val = {2}", next_y, next_x, def_val, test);
+                        Console.WriteLine("Greater:");
+                        Console.WriteLine("Temp {3} Check {0}, {1}: def_val = {2}", next_y, next_x, def_val, test);
+                    }
+                    if (beta <= alpha)
+                    {
+                        break;
                     }
                 }
                 //temp.Add(next_y * 3 + next_x);
